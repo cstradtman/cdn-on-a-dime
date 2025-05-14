@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik-config
+  namespace: traefik
+  labels:
+    app: traefik-config
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik-config
+  template:
+    metadata:
+      labels:
+        app: traefik-config
+    spec:
+      containers:
+        - name: traefik-config
+          image: ghcr.io/cstradtman/traefik-config-provider:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
+          command: ["python3", "dynamic_config.py"]
+          args: ["--port", "5000", "--verbose"]  # Enable verbose logging
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 2
+            periodSeconds: 5
+      imagePullSecrets:
+        - name: ghcr-secret

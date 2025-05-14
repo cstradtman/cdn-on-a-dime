@@ -1,0 +1,86 @@
+flowchart TD
+
+  %% gstreamer Deployment
+  subgraph G["gstreamer"]
+    subgraph GD["gstreamer Deployment (default)"]
+      GI["**Init**:<br>wait-for-nginx<br>(busybox)"]
+      GM["**Main:**<br>gstreamer<br>(ghcr.io/cstradtman/gstreamer_livesource)"]
+    end
+
+    subgraph N["nginx Deployment (default)"]
+      NC["**Container:**<br>nginx (ghcr.io/cstradtman/gstreamer_webserver)"]
+      NV["**Volume:**<br>live-storage (/live)"]
+    end
+
+    subgraph S["nginx Service (LB)"]
+      SF["**Ports:**<br>HTTP 8080<br>RTSP 1935"]
+      SA["**Annotations:**<br>DNS video.cluster.mycdndomain.us<br>Pool: mikrotik"]
+    end
+  end
+
+  %% Traefik Dynamic Configuration
+  subgraph T["Traefik Dynamic Configuration"]
+    subgraph TS["traefik-config service (LB)"]
+      TSP["**Ports:**<br>HTTP 5000"]
+      TSA["**Annotations:**<br>DNS traefik-config.cluster.mycdndomain.us<br>Pool: mikrotik"]
+    end
+    TD[("Kubernetes Object Store")]
+    TP["**Deployment**<br>dynamic_config.py"]
+  end
+
+  %% Traefik Proxies
+  subgraph Traefik["Traefik Proxies"]
+    Proxy["Proxy"]
+    Cache["plugin-simplecache"]
+  end
+
+  %% Vultr Cloud
+  subgraph V["Vultr Cloud"]
+    Traefik
+    VD["vultr dns"]
+  end
+
+  %% whoami service
+  subgraph WS["whoami service (LB)"]
+    WSP["**Ports:**<br>HTTP 80"]
+    WSA["**Annotations:**<br>DNS whoami.cluster.mycdndomain.us<br>Pool: mikrotik"]
+  end
+
+  %% whoami Grouping
+  subgraph W["whoami"]
+    WS
+    WC["**Container**<br>whoami (hub.docker.com/r/containous/whoami)"]
+  end
+
+  %% External DNS
+  subgraph D["externalDns"]
+  end
+
+  %% Internet Clients
+  subgraph I["***Internet***"]
+    vclient["video client 👤"]
+    wclient["whoami client 👤"]
+  end
+
+  %% Connections
+  GI <-- "TCP probe<br>(nginx:8080)" --> S
+  N -- "video stream" --> S
+  GI --> GM
+  GM -- "video stream" --> N
+  S -- "video stream" --> Traefik
+  TD <-- "config maps" --> TP
+  TP <-- "configuration" --> TS
+  TS -- "configuration" --> Proxy
+  Proxy <--> Cache
+  SA -.-> D
+  TSA -.-> D
+  D --> VD
+  WC --> WS
+  WSA -.-> D
+  WSA --> Traefik
+  Traefik --- Cache
+  Proxy -- "video stream" --> vclient
+  Proxy --> wclient
+
+  vclient@{ shape: display }
+  wclient@{ shape: display }

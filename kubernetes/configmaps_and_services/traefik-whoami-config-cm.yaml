@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-whoami-config
+  namespace: traefik
+  labels:
+    traefik-config-fragment: "true"
+data:
+  traefik-whoami-config.yaml: |
+    http:
+      middlewares:
+        my-plugin-simplecache:
+          plugin:
+            plugin-simplecache:
+              path: /tmp
+
+      routers:
+        whoami-router:
+          rule: Host(`whoami.edge.mycdndomain.us`) 
+          service: whoami-service
+          middlewares:
+            - my-plugin-simplecache
+
+      services:
+        whoami-service:
+          loadBalancer:
+            servers:
+              - url: http://whoami.cluster.mycdndomain.us
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: whoami-service
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: whoami.edge.mycdndomain.us
+spec:
+  type: ExternalName
+  externalName: edge.mygenericdomain.us
+

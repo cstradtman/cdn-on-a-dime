@@ -1,0 +1,37 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: gstreamer
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gstreamer
+  template:
+    metadata:
+      labels:
+        app: gstreamer
+    spec:
+      initContainers:
+        - name: wait-for-nginx
+          image: busybox
+          command:
+            - sh
+            - '-c'
+            - until nc -z nginx 8080; do echo waiting for nginx; sleep 2; done;
+          imagePullPolicy: Always
+      containers:
+        - name: gstreamer
+          image: ghcr.io/cstradtman/gstreamer_livesource:main
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: ghcrpullcred
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: athome-node
+                    operator: DoesNotExist
+

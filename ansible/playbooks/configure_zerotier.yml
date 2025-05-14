@@ -1,0 +1,46 @@
+---
+- name: Install ZeroTier using the official script
+  hosts: remote_machines
+  become: yes
+
+  tasks:
+    # Download the ZeroTier installation script
+    - name: Download ZeroTier installation script
+      get_url:
+        url: https://install.zerotier.com/
+        dest: /tmp/zerotier-install.sh
+        mode: '0755'
+
+    # Run the installation script
+    - name: Install ZeroTier
+      command:
+        cmd: bash /tmp/zerotier-install.sh -y
+      async: 300
+      poll: 10
+
+    # Ensure ZeroTier service is enabled and running
+    - name: Ensure ZeroTier service is running
+      service:
+        name: zerotier-one
+        state: started
+        enabled: yes
+
+    # Join the ZeroTier network
+    - name: Join ZeroTier network
+      command:
+        cmd: zerotier-cli join <my zerotier network id>
+      register: zerotier_join_output
+
+    # Debug: Print the ZeroTier join output
+    - name: Print ZeroTier join output
+      debug:
+        var: zerotier_join_output.stdout
+
+    # Verify connection to the ZeroTier network
+    - name: List ZeroTier networks
+      command: zerotier-cli listnetworks
+      register: zerotier_networks
+
+    - name: Print ZeroTier networks
+      debug:
+        var: zerotier_networks.stdout

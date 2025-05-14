@@ -1,0 +1,51 @@
+---
+- name: Configure Traefik with using Podman
+  hosts: remote_machines
+  become: yes
+
+  tasks:
+
+    - name: Ensure Podman is installed
+      package:
+        name: podman
+        state: present
+
+    - name: Ensure /etc/containers/registries.conf exists and is correctly configured
+      copy:
+        dest: /etc/containers/registries.conf
+        content: |
+          unqualified-search-registries = ["docker.io"]
+
+    - name: Ensure /etc/traefik directory exists
+      file:
+        path: /etc/traefik
+        state: directory
+        mode: '0755'
+    
+    - name: upload traefik.toml
+      copy:
+        src: traefik.toml
+        dest: /etc/traefik/traefik.toml
+        mode: '0644'
+
+    - name: Stop and remove existing Traefik container if it exists i
+      containers.podman.podman_container: 
+        name: traefik 
+        state: absent
+
+    - name: Create Traefik container with configuration
+      containers.podman.podman_container:
+        name: traefik
+        image: docker.io/traefik:latest
+        state: started
+        restart_policy: always
+        ports:
+          - "80:80"
+          - "443:443"
+          - "8080:8080"
+        volumes:
+          - "/run/podman/podman.sock:/run/podman/podman.sock"
+          - "/etc/traefik/traefik.toml:/etc/traefik/traefik.toml"
+          - "/tmp:/tmp"
+        etc_hosts:
+          kubernetes: "192.168.101.1"

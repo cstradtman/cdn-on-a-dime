@@ -1,0 +1,50 @@
+# traefik.toml
+
+# Global configuration (optional, but good to have)
+[global]
+  checkNewVersion = true
+  sendAnonymousUsage = false # Set to true if you want to send anonymous usage statistics
+
+# API and Dashboard
+[api]
+  dashboard = true
+  insecure = true # For testing/internal use. Secure this for production (e.g., behind auth middleware).
+
+[experimental.plugins.plugin-simplecache]
+  moduleName = "github.com/traefik/plugin-simplecache"
+  version = "v0.2.1"
+
+[serversTransport]
+  insecureSkipVerify = true
+
+# EntryPoints (HTTP/HTTPS listeners)
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+    # Optional: Redirect HTTP to HTTPS
+    # [entryPoints.web.http.redirections]
+    #   [entryPoints.web.http.redirections.entryPoint]
+    #     to = "websecure"
+    #     scheme = "https"
+
+  [entryPoints.websecure]
+    address = ":443"
+    # Optional: Define default TLS configuration if needed
+    # [entryPoints.websecure.http.tls]
+    #   certResolver = "myresolver" # Example: using Let's Encrypt
+
+# Log configuration (from your snippet)
+[log]
+  level = "DEBUG" # Or "DEBUG" for more verbosity
+  format = "common" # Or "json"
+
+# Access Log configuration (from your snippet)
+[accessLog]
+  format = "common" # Or "json"
+  # You can add filtering, fields, etc. here if needed
+  # [accessLog.filters]
+  #   statusCodes = ["200", "300-304"]
+
+[providers.http]
+  endpoint = "http://traefik-config.cluster.mycdndomain.us:5000/traefik-config"
+  pollInterval = "10s"

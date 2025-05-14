@@ -1,0 +1,21 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nginx
+  namespace: default
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: video.cluster.mycdndomain.us
+    metallb.io/ip-allocated-from-pool: mikrotik
+spec:
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+    - name: rtsp
+      protocol: TCP
+      port: 1935
+      targetPort: 1935
+  selector:
+    app: nginx
+  type: LoadBalancer

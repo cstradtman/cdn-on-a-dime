@@ -1,0 +1,41 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nginx
+  namespace: default
+spec:
+  template:
+    metadata:
+      labels:
+        app: nginx
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+    spec:
+      volumes:
+        - name: live-storage
+      containers:
+        - name: nginx
+          image: ghcr.io/cstradtman/gstreamer_webserver:main
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+            - containerPort: 1935
+              protocol: TCP
+          volumeMounts:
+            - name: live-storage
+              mountPath: /live
+          imagePullPolicy: Always
+      restartPolicy: Always
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: ghcrpullcred
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: athome-node
+                    operator: DoesNotExist
+

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-config
+  namespace: traefik  # Add this line
+  annotations:
+    metallb.io/ip-allocated-from-pool: mikrotik  # If using a specific MetalLB IP pool
+    external-dns.alpha.kubernetes.io/hostname: traefik-config.cluster.mycdndomain.us
+spec:
+  selector:
+    app: traefik-config
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+  type: LoadBalancer  # Adjust if needed

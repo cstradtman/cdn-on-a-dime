@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik-video-config
+  namespace: traefik
+  labels:
+    traefik-config-fragment: "true"
+data:
+  traefik-video-config.yaml: |
+    http:
+      middlewares:
+        my-plugin-simplecache:
+          plugin:
+            plugin-simplecache:
+              path: /tmp
+
+      routers:
+        video-router:
+          rule: Host(`video.edge.mycdndomain.us`) 
+          service: video-service
+          middlewares:
+            - my-plugin-simplecache
+
+      services:
+        video-service:
+          loadBalancer:
+            servers:
+              - url: http://video.cluster.mycdndomain.us:8080
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: video-service
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: video.edge.mycdndomain.us
+spec:
+  type: ExternalName
+  externalName: edge.mygenericdomain.us
