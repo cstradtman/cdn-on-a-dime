@@ -52,7 +52,7 @@ The architecture (illustrated in the [Mermaid diagram](./docs/diagram.mermaid) a
   - Exposed via ExternalDNS and MetalLB for external access.
 
 ## Repository Structure
-
+```
 .
 ├── ansible/                 # Ansible playbooks for automation and configuration
 │   └── playbooks/
@@ -81,7 +81,7 @@ The architecture (illustrated in the [Mermaid diagram](./docs/diagram.mermaid) a
     └── whoami-service/      # Deployment and service for whoami
         ├── deployment.yml
         └── service.yml
-
+```
 
 
 ## Deployment Overview
