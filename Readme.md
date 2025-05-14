@@ -32,11 +32,13 @@ The architecture (illustrated in the [Mermaid diagram](./docs/diagram.mermaid) a
 - **gstreamer Deployment:**  
   - An **init container** (using BusyBox) waits for the nginx service (TCP probe on port 8080).
   - The **main gstreamer container** streams video data to nginx.
+  - see https://github.com/cstradtman/gstreamer_livesource
 
 - **nginx Deployment & Service:**  
   - The nginx container (deployed via Kubernetes) aggregates the video stream and serves content.
   - A persistent volume (`live-storage`) is mounted.
   - The service has external DNS annotations and load-balancer settings (HTTP 8080 / RTSP 1935).
+  - see https://github.com/cstradtman/gstreamer_webserver
 
 - **Traefik Dynamic Configuration:**  
   - A dynamic configuration service (`dynamic_config.py`) updates Traefik settings based on Kubernetes ConfigMaps.
